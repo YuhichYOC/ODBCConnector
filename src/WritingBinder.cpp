@@ -1,21 +1,40 @@
 /*
+ *
  * WritingBinder.cpp
  *
- *  Created on: 2017/02/13
- *      Author: mssqlserver
+ * Copyright 2016 Yuichi Yoshii
+ *     吉井雄一 @ 吉井産業  you.65535.kir@gmail.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
-
-#include "stdafx.h"
 
 #include "WritingBinder.h"
 
-void WNumberBinder::BindParam(SQLHANDLE statement) {
+void WNumberBinder::BindParam(void * statement) {
     bindSuccess = false;
-    SQLLEN cbTextSize = SQL_LEN_DATA_AT_EXEC(size);
-    returnCode = SQLBindParameter(statement, index + 1,
-    SQL_PARAM_INPUT,
-    SQL_C_SHORT,
-    SQL_INTEGER, size, scale, (SQLPOINTER) &value, 0, &cbTextSize);
+    long cbTextSize = SQL_LEN_DATA_AT_EXEC(size);
+    returnCode = SQLBindParameter(
+            statement,
+            index + 1,
+            SQL_PARAM_INPUT,
+            SQL_C_SHORT,
+            SQL_INTEGER,
+            size,
+            scale,
+            (void *) &value,
+            0,
+            &cbTextSize);
     if (returnCode != SQL_SUCCESS && returnCode != SQL_SUCCESS_WITH_INFO) {
         WCharString wcs;
         errorMessage = wcs.SysErrMessage();
@@ -24,7 +43,7 @@ void WNumberBinder::BindParam(SQLHANDLE statement) {
     }
 }
 
-void WNumberBinder::SetType(SQLSMALLINT arg) {
+void WNumberBinder::SetType(signed short arg) {
     rawColumnType = arg;
 }
 
@@ -40,19 +59,19 @@ int WNumberBinder::GetIndex() {
     return index;
 }
 
-void WNumberBinder::SetSize(SQLLEN arg) {
+void WNumberBinder::SetSize(long arg) {
     size = arg;
 }
 
-SQLLEN WNumberBinder::GetSize() {
+long WNumberBinder::GetSize() {
     return size;
 }
 
-void WNumberBinder::SetScale(SQLSMALLINT arg) {
+void WNumberBinder::SetScale(signed short arg) {
     scale = arg;
 }
 
-SQLSMALLINT WNumberBinder::GetScale() {
+signed short WNumberBinder::GetScale() {
     return scale;
 }
 
@@ -68,11 +87,11 @@ int * WNumberBinder::GetValueAddress() {
     return &value;
 }
 
-void WNumberBinder::Bind(SQLHANDLE statement) {
+void WNumberBinder::Bind(void * statement) {
     BindParam(statement);
 }
 
-SQLRETURN WNumberBinder::GetReturnCode() {
+signed short WNumberBinder::GetReturnCode() {
     return returnCode;
 }
 
@@ -85,19 +104,34 @@ bool WNumberBinder::GetBindSuccess() {
 }
 
 WNumberBinder::WNumberBinder() {
+    rawColumnType = 0;
+    index = 0;
+    size = 0;
+    scale = 0;
+    value = 0;
+    nullIndicator = 0;
+    returnCode = 0;
+    bindSuccess = false;
 }
 
 WNumberBinder::~WNumberBinder() {
 }
 
-void WStringBinder::BindParam(SQLHANDLE statement) {
+void WStringBinder::BindParam(void * statement) {
     bindSuccess = false;
 
-    SQLLEN cbTextSize = SQL_LEN_DATA_AT_EXEC(size);
-    returnCode = SQLBindParameter(statement, index + 1,
-    SQL_PARAM_INPUT,
-    SQL_C_TCHAR,
-    SQL_VARCHAR, size, 0, (SQLPOINTER) value, 0, &cbTextSize);
+    long cbTextSize = SQL_LEN_DATA_AT_EXEC(size);
+    returnCode = SQLBindParameter(
+            statement,
+            index + 1,
+            SQL_PARAM_INPUT,
+            SQL_C_TCHAR,
+            SQL_VARCHAR,
+            size,
+            0,
+            (void *) value,
+            0,
+            &cbTextSize);
     if (returnCode != SQL_SUCCESS && returnCode != SQL_SUCCESS_WITH_INFO) {
         WCharString wcs;
         errorMessage = wcs.SysErrMessage();
@@ -106,7 +140,7 @@ void WStringBinder::BindParam(SQLHANDLE statement) {
     }
 }
 
-void WStringBinder::SetType(SQLSMALLINT arg) {
+void WStringBinder::SetType(signed short arg) {
     rawColumnType = arg;
 }
 
@@ -122,51 +156,67 @@ int WStringBinder::GetIndex() {
     return index;
 }
 
-void WStringBinder::SetSize(SQLLEN arg) {
+void WStringBinder::SetSize(long arg) {
     size = arg;
 }
 
-SQLLEN WStringBinder::GetSize() {
+long WStringBinder::GetSize() {
     return size;
 }
 
-void WStringBinder::SetScale(SQLSMALLINT arg) {
+void WStringBinder::SetScale(signed short arg) {
     scale = arg;
 }
 
-SQLSMALLINT WStringBinder::GetScale() {
+signed short WStringBinder::GetScale() {
     return scale;
 }
 
 void WStringBinder::SetValue(char * arg) {
     wc = wc.Value(arg);
-    value = wc.ToChar();
+    int valueSize = wc.ToString().length();
+    value = new char[valueSize];
+    for (int i = 0; i < valueSize; i++) {
+        value[i] = wc.ToString().c_str()[i];
+    }
 }
 
 void WStringBinder::SetValue(const char * arg) {
     wc = wc.Value(arg);
-    value = wc.ToChar();
+    int valueSize = wc.ToString().length();
+    value = new char[valueSize];
+    for (int i = 0; i < valueSize; i++) {
+        value[i] = wc.ToString().c_str()[i];
+    }
 }
 
 void WStringBinder::SetValue(wchar_t * arg) {
     wc = wc.Value(arg);
-    value = wc.ToChar();
+    int valueSize = wc.ToString().length();
+    value = new char[valueSize];
+    for (int i = 0; i < valueSize; i++) {
+        value[i] = wc.ToString().c_str()[i];
+    }
 }
 
 void WStringBinder::SetValue(const wchar_t * arg) {
     wc = wc.Value(arg);
-    value = wc.ToChar();
+    int valueSize = wc.ToString().length();
+    value = new char[valueSize];
+    for (int i = 0; i < valueSize; i++) {
+        value[i] = wc.ToString().c_str()[i];
+    }
 }
 
 char * WStringBinder::GetValue() {
     return value;
 }
 
-void WStringBinder::Bind(SQLHANDLE statement) {
+void WStringBinder::Bind(void * statement) {
     BindParam(statement);
 }
 
-SQLRETURN WStringBinder::GetReturnCode() {
+signed short WStringBinder::GetReturnCode() {
     return returnCode;
 }
 
@@ -179,6 +229,14 @@ bool WStringBinder::GetBindSuccess() {
 }
 
 WStringBinder::WStringBinder() {
+    rawColumnType = 0;
+    index = 0;
+    size = 0;
+    scale = 0;
+    value = nullptr;
+    nullIndicator = 0;
+    returnCode = 0;
+    bindSuccess = false;
 }
 
 WStringBinder::~WStringBinder() {
@@ -188,7 +246,7 @@ void WritingBinder::AddBinder(IBinder * arg) {
     columns->push_back(arg);
 }
 
-bool WritingBinder::Bind(SQLHANDLE statement) {
+bool WritingBinder::Bind(void * statement) {
     for (size_t i = 0; i < columns->size(); i++) {
         columns->at(i)->Bind(statement);
         if (!columns->at(i)->GetBindSuccess()) {
@@ -200,7 +258,7 @@ bool WritingBinder::Bind(SQLHANDLE statement) {
     return true;
 }
 
-SQLRETURN WritingBinder::GetReturnCode() {
+signed short WritingBinder::GetReturnCode() {
     return returnCode;
 }
 
@@ -208,12 +266,13 @@ string WritingBinder::GetErrorMessage() {
     return errorMessage;
 }
 
-vector<IBinder*>* WritingBinder::Get() {
+vector<IBinder *> * WritingBinder::Get() {
     return columns;
 }
 
 WritingBinder::WritingBinder() {
     columns = new vector<IBinder *>();
+    returnCode = 0;
 }
 
 WritingBinder::~WritingBinder() {

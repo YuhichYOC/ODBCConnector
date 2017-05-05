@@ -1,6 +1,6 @@
 /*
  *
- * IBinder.h
+ * TestRun.cpp
  *
  * Copyright 2016 Yuichi Yoshii
  *     吉井雄一 @ 吉井産業  you.65535.kir@gmail.com
@@ -19,37 +19,9 @@
  *
  */
 
-#ifndef SRC_IBINDER_H_
-#define SRC_IBINDER_H_
+#include "ODBCConnector.h"
 
-#include "WCharString.h"
-
-class IBinder {
-public:
-
-    enum ColumnType {
-        STRING, NUMBER,
-    };
-
-    virtual ColumnType GetType() = 0;
-
-    virtual void SetIndex(int arg) = 0;
-
-    virtual void SetType(signed short arg) = 0;
-
-    virtual void SetSize(long arg) = 0;
-
-    virtual void SetScale(signed short arg) = 0;
-
-    virtual void Bind(void * statement) = 0;
-
-    virtual signed short GetReturnCode() = 0;
-
-    virtual string GetErrorMessage() = 0;
-
-    virtual bool GetBindSuccess() = 0;
-
-    virtual ~IBinder() {};
-};
-
-#endif /* SRC_IBINDER_H_ */
+int main() {
+    ODBCConnector c;
+    return 0;
+}

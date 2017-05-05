@@ -1,15 +1,27 @@
 /*
+ *
  * ReadingBinder.cpp
  *
- *  Created on: 2017/02/13
- *      Author: mssqlserver
+ * Copyright 2016 Yuichi Yoshii
+ *     吉井雄一 @ 吉井産業  you.65535.kir@gmail.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
-
-#include "stdafx.h" // ✝
 
 #include "ReadingBinder.h"
 
-void RNumberBinder::SetType(SQLSMALLINT arg) {
+void RNumberBinder::SetType(signed short arg) {
     rawColumnType = arg;
 }
 
@@ -25,19 +37,19 @@ int RNumberBinder::GetIndex() {
     return index;
 }
 
-void RNumberBinder::SetSize(SQLLEN arg) {
+void RNumberBinder::SetSize(long arg) {
     size = arg;
 }
 
-SQLLEN RNumberBinder::GetSize() {
+long RNumberBinder::GetSize() {
     return size;
 }
 
-void RNumberBinder::SetScale(SQLSMALLINT arg) {
+void RNumberBinder::SetScale(signed short arg) {
     scale = arg;
 }
 
-SQLSMALLINT RNumberBinder::GetScale() {
+signed short RNumberBinder::GetScale() {
     return scale;
 }
 
@@ -53,10 +65,15 @@ int * RNumberBinder::GetValueAddress() {
     return &value;
 }
 
-void RNumberBinder::Bind(SQLHANDLE statement) {
+void RNumberBinder::Bind(void * statement) {
     bindSuccess = false;
-    returnCode = SQLBindCol(statement, index + 1,
-    SQL_C_CHAR, (SQLPOINTER) &value, size, &nullIndicator);
+    returnCode = SQLBindCol(
+            statement,
+            index + 1,
+            SQL_C_CHAR,
+            (void *) &value,
+            size,
+            &nullIndicator);
     if (returnCode != SQL_SUCCESS && returnCode != SQL_SUCCESS_WITH_INFO) {
         WCharString wcs;
         errorMessage = wcs.SysErrMessage();
@@ -65,7 +82,7 @@ void RNumberBinder::Bind(SQLHANDLE statement) {
     }
 }
 
-SQLRETURN RNumberBinder::GetReturnCode() {
+signed short RNumberBinder::GetReturnCode() {
     return returnCode;
 }
 
@@ -78,12 +95,20 @@ bool RNumberBinder::GetBindSuccess() {
 }
 
 RNumberBinder::RNumberBinder() {
+    rawColumnType = 0;
+    index = 0;
+    size = 0;
+    scale = 0;
+    value = 0;
+    nullIndicator = 0;
+    returnCode = 0;
+    bindSuccess = false;
 }
 
 RNumberBinder::~RNumberBinder() {
 }
 
-void RStringBinder::SetType(SQLSMALLINT arg) {
+void RStringBinder::SetType(signed short arg) {
     rawColumnType = arg;
 }
 
@@ -99,47 +124,47 @@ int RStringBinder::GetIndex() {
     return index;
 }
 
-void RStringBinder::SetSize(SQLLEN arg) {
+void RStringBinder::SetSize(long arg) {
     size = arg;
 }
 
-SQLLEN RStringBinder::GetSize() {
+long RStringBinder::GetSize() {
     return size;
 }
 
-void RStringBinder::SetScale(SQLSMALLINT arg) {
+void RStringBinder::SetScale(signed short arg) {
     scale = arg;
 }
 
-SQLSMALLINT RStringBinder::GetScale() {
+signed short RStringBinder::GetScale() {
     return scale;
 }
 
 void RStringBinder::SetValue(char * arg) {
     wc = wc.Value(arg);
-    value = wc.ToWChar();
+    value = wc.ToWChar().get();
 }
 
 void RStringBinder::SetValue(const char * arg) {
     wc = wc.Value(arg);
-    value = wc.ToWChar();
+    value = wc.ToWChar().get();
 }
 
 void RStringBinder::SetValue(wchar_t * arg) {
     wc = wc.Value(arg);
-    value = wc.ToWChar();
+    value = wc.ToWChar().get();
 }
 
 void RStringBinder::SetValue(const wchar_t * arg) {
     wc = wc.Value(arg);
-    value = wc.ToWChar();
+    value = wc.ToWChar().get();
 }
 
 wchar_t * RStringBinder::GetValue() {
     return value;
 }
 
-void RStringBinder::Bind(SQLHANDLE statement) {
+void RStringBinder::Bind(void * statement) {
     bindSuccess = false;
 
     if (rawColumnType == 12) {
@@ -151,7 +176,7 @@ void RStringBinder::Bind(SQLHANDLE statement) {
             statement,
             index + 1,
             SQL_C_TCHAR,
-            (SQLPOINTER) value,
+            (void *) value,
             (size + 1) * sizeof(wchar_t),
             &nullIndicator);
     if (returnCode != SQL_SUCCESS && returnCode != SQL_SUCCESS_WITH_INFO) {
@@ -162,7 +187,7 @@ void RStringBinder::Bind(SQLHANDLE statement) {
     }
 }
 
-SQLRETURN RStringBinder::GetReturnCode() {
+signed short RStringBinder::GetReturnCode() {
     return returnCode;
 }
 
@@ -175,6 +200,14 @@ bool RStringBinder::GetBindSuccess() {
 }
 
 RStringBinder::RStringBinder() {
+    rawColumnType = 0;
+    index = 0;
+    size = 0;
+    scale = 0;
+    value = nullptr;
+    nullIndicator = 0;
+    returnCode = 0;
+    bindSuccess = false;
 }
 
 RStringBinder::~RStringBinder() {
@@ -184,7 +217,7 @@ void ReadingBinder::AddBinder(IBinder * arg) {
     columns->push_back(arg);
 }
 
-bool ReadingBinder::Bind(SQLHANDLE statement) {
+bool ReadingBinder::Bind(void * statement) {
     for (size_t i = 0; i < columns->size(); i++) {
         columns->at(i)->Bind(statement);
         if (!columns->at(i)->GetBindSuccess()) {
@@ -196,7 +229,7 @@ bool ReadingBinder::Bind(SQLHANDLE statement) {
     return true;
 }
 
-SQLRETURN ReadingBinder::GetReturnCode() {
+signed short ReadingBinder::GetReturnCode() {
     return returnCode;
 }
 
@@ -204,12 +237,13 @@ string ReadingBinder::GetErrorMessage() {
     return errorMessage;
 }
 
-vector<IBinder*>* ReadingBinder::Get() {
+vector<IBinder *> * ReadingBinder::Get() {
     return columns;
 }
 
 ReadingBinder::ReadingBinder() {
     columns = new vector<IBinder *>();
+    returnCode = 0;
 }
 
 ReadingBinder::~ReadingBinder() {

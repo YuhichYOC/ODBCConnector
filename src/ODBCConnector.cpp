@@ -1,28 +1,47 @@
 /*
+ *
  * ODBCConnector.cpp
  *
- *  Created on: 2017/02/13
- *      Author: mssqlserver
+ * Copyright 2016 Yuichi Yoshii
+ *     吉井雄一 @ 吉井産業  you.65535.kir@gmail.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
-
-#include "stdafx.h" // ✝
 
 #include "ODBCConnector.h"
 
 bool ODBCConnector::DescribeTable() {
-    SQLSMALLINT columnsCount;
+    signed short columnsCount = 0;
     SQLNumResultCols(statement, &columnsCount);
 
-    for (SQLSMALLINT i = 0; i < columnsCount; i++) {
-        SQLWCHAR columnName[128];
-        SQLSMALLINT columnNameSize;
-        SQLSMALLINT columnType;
-        SQLULEN columnSize;
-        SQLSMALLINT scale;
-        SQLSMALLINT nullable;
-        rc = SQLDescribeCol(statement, (SQLUSMALLINT) (i + 1), columnName,
-                (SQLSMALLINT) sizeof(columnName), &columnNameSize, &columnType,
-                &columnSize, &scale, &nullable);
+    for (signed short i = 0; i < columnsCount; i++) {
+        unsigned char columnName[128] = { 0 };
+        short columnNameSize = 0;
+        short columnType = 0;
+        unsigned long columnSize = 0;
+        short scale = 0;
+        short nullable = 0;
+        rc = SQLDescribeCol(
+                statement,
+                i + 1,
+                columnName,
+                sizeof(columnName),
+                &columnNameSize,
+                &columnType,
+                &columnSize,
+                &scale,
+                &nullable);
         if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
             errorMessage = wcharStr.SysErrMessage();
             return false;
@@ -65,7 +84,7 @@ bool ODBCConnector::DescribeTable() {
 }
 
 bool ODBCConnector::ExecDML(string arg) {
-    unique_ptr<wchar_t> query(wcharStr.Value(arg).ToWChar());
+    unique_ptr<unsigned char> query(wcharStr.Value(arg).ToUChar());
     if (table == nullptr || table->size() == 0) {
         rc = SQLExecDirect(statement, query.get(), SQL_NTS);
         if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
@@ -76,7 +95,8 @@ bool ODBCConnector::ExecDML(string arg) {
         return true;
     } else {
         rc = SQLPrepare(statement, query.get(), SQL_NTS);
-        if (rc != SQL_SUCCESS && rc != SQL_NEED_DATA
+        if (rc != SQL_SUCCESS
+                && rc != SQL_NEED_DATA
                 && rc != SQL_SUCCESS_WITH_INFO) {
             HandleDiagnosticRecord(statement, SQL_HANDLE_STMT, rc);
             errorMessage = wcharStr.SysErrMessage();
@@ -100,7 +120,8 @@ bool ODBCConnector::ExecDML(string arg) {
                 return false;
             }
             rc = SQLExecute(statement);
-            if (rc != SQL_SUCCESS && rc != SQL_NEED_DATA
+            if (rc != SQL_SUCCESS
+                    && rc != SQL_NEED_DATA
                     && rc != SQL_SUCCESS_WITH_INFO) {
                 HandleDiagnosticRecord(statement, SQL_HANDLE_STMT, rc);
                 errorMessage = wcharStr.SysErrMessage();
@@ -119,8 +140,11 @@ void ODBCConnector::Prepare() {
         HandleDiagnosticRecord(env, SQL_HANDLE_ENV, rc);
         errorMessage = wcharStr.SysErrMessage();
     } else {
-        rc = SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION,
-                (SQLPOINTER) SQL_OV_ODBC3, 0);
+        rc = SQLSetEnvAttr(
+                env,
+                SQL_ATTR_ODBC_VERSION,
+                (void *) SQL_OV_ODBC3,
+                0);
         if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
             HandleDiagnosticRecord(env, SQL_HANDLE_ENV, rc);
             errorMessage = wcharStr.SysErrMessage();
@@ -143,11 +167,16 @@ bool ODBCConnector::GetPrepared() {
 void ODBCConnector::Connect(string arg) {
     connected = false;
 
-    unique_ptr<wchar_t> cs(wcharStr.Value(arg).ToWChar());
-    rc = SQLDriverConnect(connection,
-    NULL, cs.get(),
-    SQL_NTS, connectionString, 1024, &bufSize,
-    SQL_DRIVER_NOPROMPT);
+    unique_ptr<unsigned char> cs(wcharStr.Value(arg).ToUChar());
+    rc = SQLDriverConnect(
+            connection,
+            nullptr,
+            cs.get(),
+            SQL_NTS,
+            connectionString,
+            1024,
+            &bufSize,
+            SQL_DRIVER_NOPROMPT);
 
     if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
         connected = true;
@@ -165,9 +194,11 @@ bool ODBCConnector::GetConnected() {
 void ODBCConnector::BeginTransaction() {
     transactionBegun = false;
 
-    rc = SQLSetConnectAttr(connection,
-    SQL_ATTR_AUTOCOMMIT, (SQLPOINTER) SQL_AUTOCOMMIT_OFF,
-    SQL_NTS);
+    rc = SQLSetConnectAttr(
+            connection,
+            SQL_ATTR_AUTOCOMMIT,
+            (void *) SQL_AUTOCOMMIT_OFF,
+            SQL_NTS);
     if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
         transactionBegun = true;
     } else {
@@ -182,8 +213,9 @@ bool ODBCConnector::GetTransactionBegun() {
 
 void ODBCConnector::CommitTransaction() {
     rc = SQLEndTran(
-    SQL_HANDLE_ENV, (SQLHANDLE) env,
-    SQL_COMMIT);
+    SQL_HANDLE_ENV,
+            (void *) env,
+            SQL_COMMIT);
     if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
         transactionBegun = false;
     } else {
@@ -194,8 +226,9 @@ void ODBCConnector::CommitTransaction() {
 
 void ODBCConnector::RollbackTransaction() {
     rc = SQLEndTran(
-    SQL_HANDLE_ENV, (SQLHANDLE) env,
-    SQL_ROLLBACK);
+    SQL_HANDLE_ENV,
+            (void *) env,
+            SQL_ROLLBACK);
     if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
         transactionBegun = false;
     } else {
@@ -230,7 +263,7 @@ bool ODBCConnector::GetSQLStatementPrepared() {
 void ODBCConnector::SQLSelect(string arg) {
     selQuerySuccess = false;
 
-    unique_ptr<wchar_t> query(wcharStr.Value(arg).ToWChar());
+    unique_ptr<unsigned char> query(wcharStr.Value(arg).ToUChar());
     rc = SQLExecDirect(statement, query.get(), SQL_NTS);
 
     if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
@@ -289,8 +322,10 @@ bool ODBCConnector::GetFetchCompleted() {
     return fetchCompleted;
 }
 
-void ODBCConnector::AddParamBindPos(IBinder::ColumnType type, SQLLEN size,
-        SQLSMALLINT scale) {
+void ODBCConnector::AddParamBindPos(
+        IBinder::ColumnType type,
+        long size,
+        unsigned short scale) {
     paramBindPosAdded = false;
 
     IBinder * addBinder;
@@ -335,36 +370,56 @@ string ODBCConnector::GetErrorMessage() {
     return errorMessage;
 }
 
-void ODBCConnector::HandleDiagnosticRecord(SQLHANDLE handle,
-        SQLSMALLINT handleType, SQLRETURN retCode) {
+void ODBCConnector::HandleDiagnosticRecord(
+        void * handle,
+        short handleType,
+        short retCode) {
     if (retCode == SQL_INVALID_HANDLE) {
         locale::global(locale("C"));
         cout << "Invalid handle" << "\n";
         locale::global(locale(""));
         return;
     }
-    SQLSMALLINT iRec = 0;
-    WCHAR szSQLState[SQL_SQLSTATE_SIZE + 1];
-    SQLINTEGER error;
-    WCHAR szErrorMessage[1000];
-    while (SQLGetDiagRec(handleType, handle, ++iRec, szSQLState, &error,
+    short iRec = 0;
+    unsigned char szSQLState[SQL_SQLSTATE_SIZE + 1];
+    int error;
+    unsigned char szErrorMessage[1000];
+    while (SQLGetDiagRec(handleType,
+            handle,
+            ++iRec,
+            szSQLState,
+            &error,
             szErrorMessage,
             (SQLSMALLINT) (sizeof(szErrorMessage) / sizeof(WCHAR)),
             (SQLSMALLINT *) NULL) == SQL_SUCCESS) {
         WCharString msgCnv;
         locale::global(locale("C"));
         cout
-                << msgCnv.Value("Status = ").Append(szSQLState).Append(" ").Append(
-                        "\n").Append("Message = ").Append(szErrorMessage).ToString()
+        << msgCnv.Value("Status = ").Append(szSQLState).Append(" ").Append(
+                "\n").Append("Message = ").Append(szErrorMessage).ToString()
                 << "\n" << "\n";
         locale::global(locale(""));
     }
 }
 
 ODBCConnector::ODBCConnector() {
+    env = nullptr;
+    connection = nullptr;
+    bufSize = 0;
+    statement = nullptr;
+    rc = 0;
     rb = new ReadingBinder();
     wb = new WritingBinder();
+    table = new vector<vector<IData *>>();
+    prepared = false;
+    connected = false;
+    transactionBegun = false;
+    statementPrepared = false;
+    selQuerySuccess = false;
+    fetchCompleted = false;
     bindPos = 0;
+    paramBindPosAdded = false;
+    insQuerySuccess = false;
     disposed = false;
 }
 
