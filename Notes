@@ -1,0 +1,15 @@
+問題 ... 
+ `SQLAllocHandle' に対する定義されていない参照です
+原因 ...
+ 1. リンカに unixODBC の位置を教えていない
+ 2. リンカが unixODBC の関数 ( SQLAllocHandle など ) を認識できない
+ 3. オブジェクト作成 → リンクの順番がデフォルトのコマンドラインでは間違っている
+
+2. と 3. は現象の起きる理由が同じところにある 対処方法は以下の通り
+デフォルトのコマンドライン ...
+${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX} ${OUTPUT} ${INPUTS}
+変更後のコマンドライン ...
+${COMMAND} ${OUTPUT_FLAG} ${OUTPUT_PREFIX} ${OUTPUT} ${INPUTS} ${FLAGS}
+
+G++ コンパイラのコマンドラインパターンはデフォルトのまま
+G++ リンカのコマンドラインパターンのみ変更する必要がある
