@@ -33,29 +33,29 @@
 class WNumberBinder: public IBinder {
 private:
 
-    signed short rawColumnType;
+    SQLSMALLINT rawColumnType;
 
     int index;
 
-    long size;
+    SQLLEN size;
 
-    signed short scale;
+    SQLSMALLINT scale;
 
     int value;
 
-    long nullIndicator;
+    SQLLEN nullIndicator;
 
-    signed short returnCode;
+    SQLRETURN returnCode;
 
     string errorMessage;
 
     bool bindSuccess;
 
-    void BindParam(void * statement);
+    void BindParam(SQLHANDLE statement);
 
 public:
 
-    void SetType(signed short arg);
+    void SetType(SQLSMALLINT arg);
 
     IBinder::ColumnType GetType();
 
@@ -63,13 +63,13 @@ public:
 
     int GetIndex();
 
-    void SetSize(long arg);
+    void SetSize(SQLLEN arg);
 
-    long GetSize();
+    SQLLEN GetSize();
 
-    void SetScale(signed short arg);
+    void SetScale(SQLSMALLINT arg);
 
-    signed short GetScale();
+    SQLSMALLINT GetScale();
 
     void SetValue(int arg);
 
@@ -77,9 +77,9 @@ public:
 
     int * GetValueAddress();
 
-    void Bind(void * statement);
+    void Bind(SQLHANDLE statement);
 
-    signed short GetReturnCode();
+    SQLRETURN GetReturnCode();
 
     string GetErrorMessage();
 
@@ -93,31 +93,31 @@ public:
 class WStringBinder: public IBinder {
 private:
 
-    signed short rawColumnType;
+    SQLSMALLINT rawColumnType;
 
     int index;
 
-    long size;
+    SQLLEN size;
 
-    signed short scale;
+    SQLSMALLINT scale;
 
     char * value;
 
     WCharString wc;
 
-    long nullIndicator;
+    SQLLEN nullIndicator;
 
-    signed short returnCode;
+    SQLRETURN returnCode;
 
     string errorMessage;
 
     bool bindSuccess;
 
-    void BindParam(void * statement);
+    void BindParam(SQLHANDLE statement);
 
 public:
 
-    void SetType(signed short arg);
+    void SetType(SQLSMALLINT arg);
 
     IBinder::ColumnType GetType();
 
@@ -125,13 +125,13 @@ public:
 
     int GetIndex();
 
-    void SetSize(long arg);
+    void SetSize(SQLLEN arg);
 
-    long GetSize();
+    SQLLEN GetSize();
 
-    void SetScale(signed short arg);
+    void SetScale(SQLSMALLINT arg);
 
-    signed short GetScale();
+    SQLSMALLINT GetScale();
 
     void SetValue(char * arg);
 
@@ -143,9 +143,9 @@ public:
 
     char * GetValue();
 
-    void Bind(void * statement);
+    void Bind(SQLHANDLE statement);
 
-    signed short GetReturnCode();
+    SQLRETURN GetReturnCode();
 
     string GetErrorMessage();
 
@@ -161,7 +161,7 @@ private:
 
     vector<IBinder *> * columns;
 
-    signed short returnCode;
+    SQLRETURN returnCode;
 
     string errorMessage;
 
@@ -169,9 +169,9 @@ public:
 
     void AddBinder(IBinder * arg);
 
-    bool Bind(void * statement);
+    bool Bind(SQLHANDLE statement);
 
-    signed short GetReturnCode();
+    SQLRETURN GetReturnCode();
 
     string GetErrorMessage();
 

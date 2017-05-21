@@ -41,17 +41,17 @@
 class ODBCConnector {
 private:
 
-    void * env;
+    SQLHANDLE env;
 
-    void * connection;
+    SQLHANDLE connection;
 
-    unsigned char connectionString[1024];
+    SQLCHAR connectionString[1024];
 
-    short bufSize;
+    SQLSMALLINT bufSize;
 
-    void * statement;
+    SQLHANDLE statement;
 
-    short rc;
+    SQLRETURN rc;
 
     ReadingBinder * rb;
 
@@ -119,8 +119,8 @@ public:
 
     void AddParamBindPos(
             IBinder::ColumnType type,
-            long size,
-            unsigned short scale);
+            SQLLEN size,
+            SQLSMALLINT scale);
 
     bool GetParamBindPosAdded();
 
@@ -133,9 +133,9 @@ public:
     string GetErrorMessage();
 
     void HandleDiagnosticRecord(
-            void * handle,
-            short handleType,
-            short retCode);
+            SQLHANDLE handle,
+            SQLSMALLINT handleType,
+            SQLRETURN retCode);
 
     ODBCConnector();
 

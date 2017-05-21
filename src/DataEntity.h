@@ -33,7 +33,9 @@ public:
 
     virtual DataType GetType() = 0;
 
-    virtual ~IData() {};
+    virtual ~IData() {
+    }
+    ;
 };
 
 class NumberData: public IData {

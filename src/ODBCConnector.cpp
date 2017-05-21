@@ -22,21 +22,21 @@
 #include "ODBCConnector.h"
 
 bool ODBCConnector::DescribeTable() {
-    signed short columnsCount = 0;
+    SQLSMALLINT columnsCount;
     SQLNumResultCols(statement, &columnsCount);
 
-    for (signed short i = 0; i < columnsCount; i++) {
-        unsigned char columnName[128] = { 0 };
-        short columnNameSize = 0;
-        short columnType = 0;
-        unsigned long columnSize = 0;
-        short scale = 0;
-        short nullable = 0;
+    for (SQLSMALLINT i = 0; i < columnsCount; i++) {
+        SQLCHAR columnName[128] = { 0 };
+        SQLSMALLINT columnNameSize = 0;
+        SQLSMALLINT columnType = 0;
+        SQLULEN columnSize = 0;
+        SQLSMALLINT scale = 0;
+        SQLSMALLINT nullable = 0;
         rc = SQLDescribeCol(
                 statement,
-                i + 1,
+                (SQLUSMALLINT) (i + 1),
                 columnName,
-                sizeof(columnName),
+                (SQLSMALLINT) sizeof(columnName),
                 &columnNameSize,
                 &columnType,
                 &columnSize,
@@ -143,7 +143,7 @@ void ODBCConnector::Prepare() {
         rc = SQLSetEnvAttr(
                 env,
                 SQL_ATTR_ODBC_VERSION,
-                (void *) SQL_OV_ODBC3,
+                (SQLPOINTER) SQL_OV_ODBC3,
                 0);
         if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
             HandleDiagnosticRecord(env, SQL_HANDLE_ENV, rc);
@@ -197,7 +197,7 @@ void ODBCConnector::BeginTransaction() {
     rc = SQLSetConnectAttr(
             connection,
             SQL_ATTR_AUTOCOMMIT,
-            (void *) SQL_AUTOCOMMIT_OFF,
+            (SQLPOINTER) SQL_AUTOCOMMIT_OFF,
             SQL_NTS);
     if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
         transactionBegun = true;
@@ -214,7 +214,7 @@ bool ODBCConnector::GetTransactionBegun() {
 void ODBCConnector::CommitTransaction() {
     rc = SQLEndTran(
     SQL_HANDLE_ENV,
-            (void *) env,
+            (SQLPOINTER) env,
             SQL_COMMIT);
     if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
         transactionBegun = false;
@@ -227,7 +227,7 @@ void ODBCConnector::CommitTransaction() {
 void ODBCConnector::RollbackTransaction() {
     rc = SQLEndTran(
     SQL_HANDLE_ENV,
-            (void *) env,
+            (SQLPOINTER) env,
             SQL_ROLLBACK);
     if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
         transactionBegun = false;
@@ -324,8 +324,8 @@ bool ODBCConnector::GetFetchCompleted() {
 
 void ODBCConnector::AddParamBindPos(
         IBinder::ColumnType type,
-        long size,
-        unsigned short scale) {
+        SQLLEN size,
+        SQLSMALLINT scale) {
     paramBindPosAdded = false;
 
     IBinder * addBinder;
@@ -371,19 +371,19 @@ string ODBCConnector::GetErrorMessage() {
 }
 
 void ODBCConnector::HandleDiagnosticRecord(
-        void * handle,
-        short handleType,
-        short retCode) {
+        SQLHANDLE handle,
+        SQLSMALLINT handleType,
+        SQLRETURN retCode) {
     if (retCode == SQL_INVALID_HANDLE) {
         locale::global(locale("C"));
         cout << "Invalid handle" << "\n";
         locale::global(locale(""));
         return;
     }
-    short iRec = 0;
-    unsigned char szSQLState[SQL_SQLSTATE_SIZE + 1];
-    int error;
-    unsigned char szErrorMessage[1000];
+    SQLSMALLINT iRec = 0;
+    SQLCHAR szSQLState[SQL_SQLSTATE_SIZE + 1];
+    SQLINTEGER error;
+    SQLCHAR szErrorMessage[1000];
     while (SQLGetDiagRec(handleType,
             handle,
             ++iRec,

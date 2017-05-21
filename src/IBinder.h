@@ -49,7 +49,9 @@ public:
 
     virtual bool GetBindSuccess() = 0;
 
-    virtual ~IBinder() {};
+    virtual ~IBinder() {
+    }
+    ;
 };
 
 #endif /* SRC_IBINDER_H_ */
