@@ -22,11 +22,14 @@
 #ifndef SRC_ODBCCONNECTOR_H_
 #define SRC_ODBCCONNECTOR_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include <sql.h>
 #include <sqlext.h>
+
+#include "WCharString.h"
 
 using namespace std;
 

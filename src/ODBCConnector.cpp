@@ -891,7 +891,7 @@ void ODBCConnector::HandleDiagnosticRecord(
             (SQLSMALLINT) (sizeof(szErrorMessage) / sizeof(WCHAR)),
             (SQLSMALLINT *) NULL) == SQL_SUCCESS) {
         cout
-                << wc.Value("Status    = ").Append(szSQLState).Append("\n").ToString();
+        << wc.Value("Status    = ").Append(szSQLState).Append("\n").ToString();
         cout
                 << wc.Value("Message   = ").Append(szErrorMessage).Append("\n").ToString();
         cout << endl;
