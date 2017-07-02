@@ -28,17 +28,370 @@
 #include <sql.h>
 #include <sqlext.h>
 
-#include "WCharString.h"
+using namespace std;
 
-#include "IBinder.h"
+class IBinder
+{
+public:
 
-#include "ReadingBinder.h"
+    enum ColumnType {
+        STRING, NUMBER,
+    };
 
-#include "WritingBinder.h"
+    virtual ColumnType GetType() = 0;
 
-#include "DataEntity.h"
+    virtual void SetIndex(int arg) = 0;
 
-class ODBCConnector {
+    virtual void SetSize(long arg) = 0;
+
+    virtual void SetScale(signed short arg) = 0;
+
+    virtual void Bind(void * statement) = 0;
+
+    virtual signed short GetReturnCode() = 0;
+
+    virtual string GetErrorMessage() = 0;
+
+    virtual bool GetBindSuccess() = 0;
+
+    virtual ~IBinder() {
+    }
+    ;
+};
+
+class RNumberBinder: public IBinder
+{
+private:
+
+    int index;
+
+    SQLLEN size;
+
+    SQLSMALLINT scale;
+
+    int value;
+
+    SQLLEN nullIndicator;
+
+    SQLRETURN returnCode;
+
+    string errorMessage;
+
+    bool bindSuccess;
+
+public:
+
+    IBinder::ColumnType GetType();
+
+    void SetIndex(int arg);
+
+    int GetIndex();
+
+    void SetSize(SQLLEN arg);
+
+    SQLLEN GetSize();
+
+    void SetScale(SQLSMALLINT arg);
+
+    SQLSMALLINT GetScale();
+
+    int GetValue();
+
+    void Bind(SQLHANDLE statement);
+
+    SQLRETURN GetReturnCode();
+
+    string GetErrorMessage();
+
+    bool GetBindSuccess();
+
+    RNumberBinder();
+
+    ~RNumberBinder();
+};
+
+class RStringBinder: public IBinder
+{
+private:
+
+    int index;
+
+    SQLLEN size;
+
+    SQLSMALLINT scale;
+
+    unique_ptr<char> value;
+
+    SQLLEN nullIndicator;
+
+    SQLRETURN returnCode;
+
+    string errorMessage;
+
+    bool bindSuccess;
+
+public:
+
+    IBinder::ColumnType GetType();
+
+    void SetIndex(int arg);
+
+    int GetIndex();
+
+    void SetSize(SQLLEN arg);
+
+    SQLLEN GetSize();
+
+    void SetScale(SQLSMALLINT arg);
+
+    SQLSMALLINT GetScale();
+
+    unique_ptr<char> GetValue();
+
+    void Bind(SQLHANDLE statement);
+
+    SQLRETURN GetReturnCode();
+
+    string GetErrorMessage();
+
+    bool GetBindSuccess();
+
+    RStringBinder();
+
+    ~RStringBinder();
+};
+
+class ReadingBinder
+{
+private:
+
+    vector<IBinder *> columns;
+
+    SQLRETURN returnCode;
+
+    string errorMessage;
+
+public:
+
+    void AddBinder(IBinder * arg);
+
+    bool Bind(SQLHANDLE statement);
+
+    SQLRETURN GetReturnCode();
+
+    string GetErrorMessage();
+
+    vector<IBinder *> Get();
+
+    ReadingBinder();
+
+    ~ReadingBinder();
+};
+
+class WNumberBinder: public IBinder
+{
+private:
+
+    int index;
+
+    SQLLEN size;
+
+    SQLSMALLINT scale;
+
+    int value;
+
+    SQLLEN nullIndicator;
+
+    SQLRETURN returnCode;
+
+    string errorMessage;
+
+    bool bindSuccess;
+
+    void BindParam(SQLHANDLE statement);
+
+public:
+
+    IBinder::ColumnType GetType();
+
+    void SetIndex(int arg);
+
+    int GetIndex();
+
+    void SetSize(SQLLEN arg);
+
+    SQLLEN GetSize();
+
+    void SetScale(SQLSMALLINT arg);
+
+    SQLSMALLINT GetScale();
+
+    void SetValue(int arg);
+
+    void Bind(SQLHANDLE statement);
+
+    SQLRETURN GetReturnCode();
+
+    string GetErrorMessage();
+
+    bool GetBindSuccess();
+
+    WNumberBinder();
+
+    ~WNumberBinder();
+};
+
+class WStringBinder: public IBinder
+{
+private:
+
+    int index;
+
+    SQLLEN size;
+
+    SQLSMALLINT scale;
+
+    unique_ptr<char> value;
+
+    SQLLEN nullIndicator;
+
+    SQLRETURN returnCode;
+
+    string errorMessage;
+
+    bool bindSuccess;
+
+    void BindParam(SQLHANDLE statement);
+
+public:
+
+    IBinder::ColumnType GetType();
+
+    void SetIndex(int arg);
+
+    int GetIndex();
+
+    void SetSize(SQLLEN arg);
+
+    SQLLEN GetSize();
+
+    void SetScale(SQLSMALLINT arg);
+
+    SQLSMALLINT GetScale();
+
+    void SetValue(char * arg);
+
+    void SetValue(const char * arg);
+
+    void SetValue(wchar_t * arg);
+
+    void SetValue(const wchar_t * arg);
+
+    void SetValue(string arg);
+
+    void Bind(SQLHANDLE statement);
+
+    SQLRETURN GetReturnCode();
+
+    string GetErrorMessage();
+
+    bool GetBindSuccess();
+
+    WStringBinder();
+
+    ~WStringBinder();
+};
+
+class WritingBinder
+{
+private:
+
+    vector<IBinder *> columns;
+
+    SQLRETURN returnCode;
+
+    string errorMessage;
+
+public:
+
+    void AddBinder(IBinder * arg);
+
+    bool Bind(SQLHANDLE statement);
+
+    SQLRETURN GetReturnCode();
+
+    string GetErrorMessage();
+
+    vector<IBinder *> Get();
+
+    WritingBinder();
+
+    ~WritingBinder();
+};
+
+class IData
+{
+public:
+
+    enum DataType {
+        STRING, NUMBER,
+    };
+
+    virtual DataType GetType() = 0;
+
+    virtual ~IData() {
+    }
+    ;
+};
+
+class NumberData: public IData
+{
+private:
+
+    int value;
+
+public:
+
+    IData::DataType GetType();
+
+    void SetData(int value);
+
+    int GetData();
+
+    NumberData();
+
+    ~NumberData();
+};
+
+class StringData: public IData
+{
+private:
+
+    unique_ptr<char> value;
+
+public:
+
+    IData::DataType GetType();
+
+    void SetData(char * arg);
+
+    void SetData(const char * arg);
+
+    void SetData(wchar_t * arg);
+
+    void SetData(const wchar_t * arg);
+
+    void SetData(string arg);
+
+    unique_ptr<char> GetData();
+
+    StringData();
+
+    ~StringData();
+};
+
+class ODBCConnector
+{
 private:
 
     SQLHANDLE env;
@@ -53,13 +406,13 @@ private:
 
     SQLRETURN rc;
 
-    ReadingBinder * rb;
+    ReadingBinder rb;
 
-    WritingBinder * wb;
+    WritingBinder wb;
 
-    vector<vector<IData *>> * table;
+    vector<vector<IData *>> table;
 
-    WCharString wcharStr;
+    WCharString wc;
 
     string errorMessage;
 
@@ -124,7 +477,7 @@ public:
 
     bool GetParamBindPosAdded();
 
-    void SetInsertData(vector<vector<IData *>> * arg);
+    void SetInsertData(vector<vector<IData *>> arg);
 
     void SQLInsert(string arg);
 

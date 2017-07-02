@@ -31,7 +31,6 @@
 using namespace std;
 
 class WCharString {
-
 private:
 
     string v;
@@ -72,6 +71,10 @@ public:
 
     WCharString Append(string * arg);
 
+    WCharString Append(unique_ptr<char> arg);
+
+    WCharString Append(unique_ptr<wchar_t> arg);
+
     WCharString Append(const char * arg);
 
     WCharString Append(const unsigned char * arg);
@@ -90,6 +93,10 @@ public:
 
     WCharString Value(string * arg);
 
+    WCharString Value(unique_ptr<char> arg);
+
+    WCharString Value(unique_ptr<wchar_t> arg);
+
     WCharString Value(const char * arg);
 
     WCharString Value(const unsigned char * arg);
@@ -97,6 +104,8 @@ public:
     WCharString Value(const wchar_t * arg);
 
     WCharString Value(const string * arg);
+
+    unique_ptr<char> ToChar();
 
     unique_ptr<unsigned char> ToUChar();
 
@@ -262,7 +271,6 @@ private:
     const char * ERROR_131 = "State not recoverable";
     const char * ERROR_132 = "Operation not possible due to RF-kill";
     const char * ERROR_133 = "Memory page has hardware error";
-
 };
 
 #endif /* WCHARSTRING_H_ */
